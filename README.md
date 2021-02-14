@@ -10,11 +10,11 @@ pip install pyrituals
 
 ## Usage
 ### Import
-
 ```python
 from pyrituals import Account, Diffuser, AuthenticationException
 ```
-### Create a `aiohttp.ClientSession()` to make requests
+
+### Create a `aiohttp.ClientSession` to make requests
 ```python
 from aiohttp import ClientSession
 session = ClientSession()
@@ -32,10 +32,9 @@ UPDATE_URL = "https://rituals.sense-company.com/api/hub/update/attr" # Diffuser.
 To change the used API endpoints add an `url` parameter to the function. Example:
 ```python
 LOGIN_URL = "https://rituals.sense-company.com/ocapi/login"
-account = Account("name@example.com", "passw0rd")
-await account.authenticate(session, url=LOGIN_URL)
+account = Account("name@example.com", "passw0rd", session)
+await account.authenticate(url=LOGIN_URL)
 ```
-
 
 ### Account
 #### Create an instance
@@ -43,13 +42,13 @@ await account.authenticate(session, url=LOGIN_URL)
 email = "name@example.com"
 password = "passw0rd"
 
-account = Account(email, password)
+account = Account(email, password, session)
 ```
 
 #### Authenticate
 ```python
 try:
-    await account.authenticate(session)
+    await account.authenticate()
 except AuthenticationException as e:
     print("Could not authenticate:", e)
 ```
@@ -59,10 +58,11 @@ The account data is only available after authentication.
 ```python
 account.data
 ```
+
 #### Get linked devices
 `get_devices()` returns a list of `Diffuser`s. 
 ```python
-devices = await account.get_devices(session)
+devices = await account.get_devices()
 ```
 
 ### Diffuser
@@ -75,21 +75,20 @@ diffuser.data
 
 #### Get updated data
 ```python
-await diffuser.update_data(session)
+await diffuser.update_data()
 ```
 
 #### Turn the diffuser on
 ```python
-await diffuser.turn_on(session)
+await diffuser.turn_on()
 ```
 
 #### Turn the diffuser on
 ```python
-await diffuser.turn_off(session)
+await diffuser.turn_off()
 ```
 
 ## Example
-
 ```python
 from aiohttp import ClientSession
 from asyncio import run
@@ -99,18 +98,18 @@ import pyrituals
 
 async def main():
     async with ClientSession() as session:
-        account = pyrituals.Account("name@example.com", "passw0rd")
+        account = pyrituals.Account("name@example.com", "passw0rd", session)
         try:
-            await account.authenticate(session, url=)
+            await account.authenticate()
         except pyrituals.AuthenticationException as e:
             print("Could not authenticate:", e)
             return
         print("Account data:", account.data)
-        devices = await account.get_devices(session)
+        devices = await account.get_devices()
         for diffuser in devices:
             print("Diffuser data:", diffuser.data)
-            await diffuser.turn_on(session)
-            await diffuser.update_data(session)
+            await diffuser.turn_on()
+            await diffuser.update_data()
             print("Diffuser updated data:", diffuser.data)
 
 
