@@ -28,7 +28,7 @@ Default endpoints:
 AUTH_URL = "https://rituals.sense-company.com/ocapi/login"           # Account.authenticate()
 ACCOUNT_URL = "https://rituals.sense-company.com/api/account/hubs"   # Account.get_devices()
 HUB_URL = "https://rituals.sense-company.com/api/account/hub"        # Diffuser.update_data()
-UPDATE_URL = "https://rituals.sense-company.com/api/hub/update/attr" # Diffuser.turn_on(), Diffuser.turn_off()
+UPDATE_URL = "https://rituals.sense-company.com/api/hub/update/attr" # Diffuser.turn_*(), Diffuser.set_*()
 ```
 
 To change the used API endpoints add an `url` parameter to the function. Example:
@@ -77,9 +77,15 @@ diffuser.data
 diffuser.battery_percentage
 diffuser.charging
 diffuser.has_battery
-diffuser.hash                
+diffuser.hash
 diffuser.hub_data
+diffuser.fill
+diffuser.perfume
+diffuser.perfume_amount
+diffuser.room_size
+diffuser.is_on
 diffuser.wifi_percentage
+diffuser.room_size_square_meter
 ```
 
 #### Get updated data
@@ -109,6 +115,13 @@ Size must be an integer between 1 and 4, inclusive.
 ```python
 size = 2
 await diffuser.set_room_size(size)
+```
+
+#### Set the diffuser room size in square meters
+Size must be the integer 15, 30, 60 or 100.
+```python
+size = 60
+await diffuser.set_room_size_square_meter(size)
 ```
 
 ## Example

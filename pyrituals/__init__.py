@@ -43,12 +43,34 @@ class Diffuser:
         return self.hub_data["hash"]
 
     @property
-    def hub_data(self):
+    def hub_data(self) -> dict:
+        """Return the diffuser hub data."""
         return self.data["hub"]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
+        """Return if the diffuser is on."""
         return self.hub_data["attributes"]["fanc"] == "1"
+
+    @property
+    def room_size(self) -> int:
+        """Return the diffuser room size."""
+        return int(self.hub_data["attributes"]["roomc"])
+
+    @property
+    def perfume_amount(self) -> int:
+        """Return the diffuser perfume amount."""
+        return int(self.hub_data["attributes"]["speedc"])
+
+    @property
+    def perfume(self) -> str:
+        """Return the diffuser perfume."""
+        return self.hub_data["sensors"]["rfidc"]["title"]
+
+    @property
+    def fill(self) -> str:
+        """Return the diffuser perfume fill."""
+        return self.hub_data["sensors"]["fillc"]["title"]
 
     @property
     def wifi_percentage(self) -> int:
@@ -60,6 +82,16 @@ class Diffuser:
             "icon-signal-low.png": 25,
             "icon-signal-0.png": 0,
         }[self.hub_data["sensors"]["wific"]["icon"]]
+
+    @property
+    def room_size_square_meter(self) -> int:
+        """Return the diffuser room size in square meters."""
+        return {
+            1: 15,
+            2: 30,
+            3: 60,
+            4: 100,
+        }[self.room_size]
 
     async def update_data(self, session: ClientSession = None, url: str = HUB_URL) -> None:
         """Get updated diffuser data."""
@@ -102,6 +134,20 @@ class Diffuser:
             session = self._session
         async with session.post(url, data={'hub': self.hash, 'json': json.dumps({"attr": {"roomc": size}})}) as resp:
             resp.raise_for_status()
+
+    async def set_room_size_square_meter(self, size: int, session: ClientSession = None, url: str = UPDATE_URL) -> None:
+        """Set the diffuser room size in square meters."""
+        size = int(size)
+        if size not in [15, 30, 60, 100]:
+            raise ValueError("Size must be 15, 30, 60 or 100")
+        await self.set_room_size(
+            {
+                15: 1,
+                30: 2,
+                60: 3,
+                100: 4,
+            }[size], session, url
+        )
 
 
 class Account:
