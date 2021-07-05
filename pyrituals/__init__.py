@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import json
-from typing import List
+from typing import Any
+
 from aiohttp import ClientSession
 
 AUTH_URL = "https://rituals.sense-company.com/ocapi/login"
@@ -33,9 +36,19 @@ class Diffuser:
         return self.hub_data["sensors"]["battc"]["id"] == 21
 
     @property
+    def fill(self) -> str:
+        """Return the diffuser perfume fill."""
+        return self.hub_data["sensors"]["fillc"]["title"]
+
+    @property
     def has_battery(self) -> bool:
         """Return if the diffuser has a battery."""
         return "battc" in self.hub_data["sensors"]
+
+    @property
+    def has_cartridge(self) -> bool:
+        """Return if a cartridge is loaded in the diffuser."""
+        return self.hub_data["sensors"]["rfidc"]["id"] == 19
 
     @property
     def hash(self) -> str:
@@ -48,19 +61,24 @@ class Diffuser:
         return self.data["hub"]
 
     @property
+    def hublot(self) -> str:
+        """Return the diffuser hublot."""
+        return self.hub_data["hublot"]
+
+    @property
     def is_on(self) -> bool:
         """Return if the diffuser is on."""
         return self.hub_data["attributes"]["fanc"] == "1"
 
     @property
-    def room_size(self) -> int:
-        """Return the diffuser room size."""
-        return int(self.hub_data["attributes"]["roomc"])
+    def is_online(self) -> bool:
+        """Return if the diffuser is connected to the Rituals Cloud."""
+        return self.hub_data["status"] == 1
 
     @property
-    def perfume_amount(self) -> int:
-        """Return the diffuser perfume amount."""
-        return int(self.hub_data["attributes"]["speedc"])
+    def name(self) -> str:
+        """Return the diffuser name."""
+        return self.hub_data["attributes"]["roomnamec"]
 
     @property
     def perfume(self) -> str:
@@ -68,9 +86,29 @@ class Diffuser:
         return self.hub_data["sensors"]["rfidc"]["title"]
 
     @property
-    def fill(self) -> str:
-        """Return the diffuser perfume fill."""
-        return self.hub_data["sensors"]["fillc"]["title"]
+    def perfume_amount(self) -> int:
+        """Return the diffuser perfume amount."""
+        return int(self.hub_data["attributes"]["speedc"])
+
+    @property
+    def room_size(self) -> int:
+        """Return the diffuser room size."""
+        return int(self.hub_data["attributes"]["roomc"])
+
+    @property
+    def room_size_square_meter(self) -> int:
+        """Return the diffuser room size in square meters."""
+        return {
+            1: 15,
+            2: 30,
+            3: 60,
+            4: 100,
+        }[self.room_size]
+
+    @property
+    def version(self) -> str:
+        """Return the diffuser version."""
+        return self.hub_data["sensors"]["versionc"]
 
     @property
     def wifi_percentage(self) -> int:
@@ -82,16 +120,6 @@ class Diffuser:
             "icon-signal-low.png": 25,
             "icon-signal-0.png": 0,
         }[self.hub_data["sensors"]["wific"]["icon"]]
-
-    @property
-    def room_size_square_meter(self) -> int:
-        """Return the diffuser room size in square meters."""
-        return {
-            1: 15,
-            2: 30,
-            3: 60,
-            4: 100,
-        }[self.room_size]
 
     async def update_data(self, session: ClientSession = None, url: str = HUB_URL) -> None:
         """Get updated diffuser data."""
@@ -151,12 +179,24 @@ class Diffuser:
 
 
 class Account:
-    def __init__(self, email: str = "", password: str = "", session: ClientSession = None) -> None:
+    def __init__(
+            self,
+            email: str = "",
+            password: str = "",
+            session: ClientSession = None,
+            account_hash: str = ""
+    ) -> None:
         """Initialize the account."""
-        self._password = password
-        self._email = email
-        self._session = session
-        self.data = None
+        self._password: str = password
+        self._email: str = email
+        self._session: ClientSession | None = session
+        self.data: dict[str, Any] | None = None
+        self.account_hash: str = account_hash
+
+    @property
+    def email(self) -> str:
+        """Return the account email."""
+        return self._email
 
     async def authenticate(self, session: ClientSession = None, url: str = AUTH_URL) -> None:
         """Authenticate and save account data."""
@@ -168,12 +208,14 @@ class Account:
             if resp_data["logged_id"] != 1:
                 raise AuthenticationException(resp_data["error"])
             self.data = resp_data
+            self.account_hash = self.data["account_hash"]
+            self._email = self.data["email"]
 
-    async def get_devices(self, session: ClientSession = None, url: str = ACCOUNT_URL) -> List[Diffuser]:
+    async def get_devices(self, session: ClientSession = None, url: str = ACCOUNT_URL) -> list[Diffuser]:
         """Get all devices linked to the account."""
         if session is None:
             session = self._session
-        async with session.get(f'{url}/{self.data["account_hash"]}') as resp:
+        async with session.get(f'{url}/{self.account_hash}') as resp:
             resp.raise_for_status()
             return [Diffuser(device_data, session) for device_data in await resp.json()]
 
