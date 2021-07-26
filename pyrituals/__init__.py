@@ -48,7 +48,7 @@ class Diffuser:
     @property
     def has_cartridge(self) -> bool:
         """Return if a cartridge is loaded in the diffuser."""
-        return self.hub_data["sensors"]["rfidc"]["id"] == 19
+        return self.hub_data["sensors"]["rfidc"]["id"] != 19
 
     @property
     def hash(self) -> str:
