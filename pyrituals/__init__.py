@@ -246,7 +246,7 @@ class Diffuser:
     @property
     def version(self) -> str:
         # If available – otherwise empty
-        return self.hub_data.get("sensors",{}).get("versionc","")
+        return self.hub_data.get("sensors",{}).get("versionc","").get("title","")
 
     # --- v1 methods: same signatures, internal V2 ---
     async def update_data(self, session: ClientSession = None, url: str = HUB_URL) -> None:
