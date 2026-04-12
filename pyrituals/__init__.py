@@ -245,8 +245,10 @@ class Diffuser:
 
     @property
     def version(self) -> str:
-        # If available – otherwise empty
-        return self.hub_data.get("sensors",{}).get("versionc","")
+        v = self.hub_data.get("sensors", {}).get("versionc", "")
+        if isinstance(v, dict):
+            return v.get("title", v.get("raw", ""))
+        return str(v) if v else ""
 
     # --- v1 methods: same signatures, internal V2 ---
     async def update_data(self, session: ClientSession = None, url: str = HUB_URL) -> None:
